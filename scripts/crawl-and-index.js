@@ -7,7 +7,7 @@ const { createClient } = require('@supabase/supabase-js');
 const BASE_URL = "https://enlightlab.com";
 
 const SEED_URLS = [
-  "/", "/about/", "/contact/", "/case-study/huma/", "/blog/",
+  "/", "/about/", "/contact/", "/case-study/huma/", "/case-study/pasqal/", "/case-study/mozilla-foundation/", "/case-study/emblazer-ai/", "/blog/",
   "/services/ai-agent-development/",
   "/services/ai-consulting/",
   "/services/cto-as-a-service/",

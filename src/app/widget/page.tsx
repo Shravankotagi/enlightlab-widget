@@ -736,19 +736,27 @@ function WidgetContent() {
             </button>
           </div>
 
-          <form onSubmit={handleTextSubmit} className="flex items-center gap-2">
-            <input
-              type="text"
+          <form onSubmit={handleTextSubmit} className="flex items-end gap-2">
+            <textarea
               value={input}
               disabled={loading || isVoiceMode}
               onChange={e => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  const dummyEvent = {
+                    preventDefault: () => {}
+                  } as React.FormEvent;
+                  handleTextSubmit(dummyEvent);
+                }
+              }}
               placeholder={isVoiceMode ? 'Call in progress. Hang up to type...' : 'Type your message...'}
-              className="flex-1 px-3 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50"
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 resize-none overflow-y-auto h-10 max-h-24 leading-normal"
             />
             <button
               type="submit"
               disabled={loading || !input.trim() || isVoiceMode}
-              className="p-2.5 rounded-full text-white flex items-center justify-center shadow-md disabled:opacity-40 disabled:pointer-events-none cursor-pointer border-none"
+              className="p-2.5 rounded-full text-white flex items-center justify-center shadow-md disabled:opacity-40 disabled:pointer-events-none cursor-pointer border-none shrink-0 mb-0.5"
               style={{ backgroundColor: primaryBg }}
             >
               <Send className="w-4 h-4" />
