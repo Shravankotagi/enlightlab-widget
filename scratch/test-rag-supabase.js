@@ -93,6 +93,7 @@ async function run() {
   await testQuery("Tell me about your AI agent development service");
   await testQuery("What case studies do you have for healthcare");
   await testQuery("Do you hire ReactJS or NextJS developers");
+  await testQuery("What did you do for Pasqal?");
   await testQuery("What is your favorite recipe for chocolate cake"); // Out-of-KB test query
 }
 
