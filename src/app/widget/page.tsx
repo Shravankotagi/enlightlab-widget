@@ -128,7 +128,20 @@ function WidgetContent() {
         client.on('call_started', () => {
           setIsCalling(true);
           setCallStatus('Connected');
+          setVoiceTranscript(''); // Reset previous transcript
           console.log("[Retell Voice] WebRTC Call connected.");
+        });
+
+        client.on('update', (update: any) => {
+          if (update && Array.isArray(update.transcript)) {
+            const currentTranscript = update.transcript
+              .map((item: any) => {
+                const speaker = item.role === 'user' ? 'You' : 'Agent';
+                return `${speaker}: ${item.content}`;
+              })
+              .join('\n');
+            setVoiceTranscript(currentTranscript);
+          }
         });
 
         client.on('call_ended', () => {
