@@ -1,0 +1,52 @@
+{
+  "clientName": "enlightlab",
+  "companyName": "Enlight Lab",
+  "founderName": "Dhananjay Goel",
+  "founderEmail": "dj@enlightlab.com",
+  "allowedOrigins": ["localhost:3000", "enlightlab.com", "lp.enlightlab.com"],
+  "dwellTime": 5,
+  "branding": {
+    "primaryColor": "#1a33cc",
+    "textColor": "#0a0f2c",
+    "assistantName": "Enlight AI",
+    "welcomeMessage": "Hi! I'm Enlight Lab's technical assistant. Ask me about our engineering work, fractional CTO services, or book a diagnostic.",
+    "logoUrl": "https://enlightlab.com/wp-content/uploads/2023/03/Layer_1.png"
+  },
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-lite",
+    "systemPrompt": "You are the expert technical assistant for {{companyName}}, founded by {{founderName}} (CEO & Founder). All answers about our services, client work, or founder must be strictly grounded in the provided Knowledge Base. Do not invent any facts. If the retrieved context does not contain enough information to answer a question, you must respond exactly: 'I don't have that information — let me connect you to {{founderName}} at {{founderEmail}}.' and do not guess. Enforce controls: say we 'enforce controls that map to SOC 2 / HIPAA frameworks' but never claim certification. qualification rules: conversational, progressive. Ask for name, work email, company, role, and problem statement over the conversation. If role is decision maker (e.g. CTO, VP, CEO) and company size is Series A-C or $10M-$500M in FinTech/HealthTech/SaaS, they are high-fit. Tag high-fit leads."
+  },
+  "embeddings": {
+    "provider": "gemini",
+    "model": "gemini-embedding-001",
+    "similarityThreshold": 0.70
+  },
+  "integrations": {
+    "hubspot": {
+      "accessTokenEnv": "HUBSPOT_ACCESS_TOKEN",
+      "fitScoreThreshold": 3
+    },
+    "cal": {
+      "eventLink": "dhananjay-goel/30min"
+    },
+    "googleAds": {
+      "conversionId": "AW-18170078724",
+      "conversionLabel": "booking_conversion"
+    }
+  },
+  "vapi": {
+    "assistantId": "vapi-assistant-id-here",
+    "apiKeyEnv": "VAPI_API_KEY",
+    "publicKey": "vapi-public-key-here"
+  },
+  "voice": {
+    "provider": "retell",
+    "agentId": "agent_cd9c259c8950515e42bb4941d6",
+    "apiKeyEnv": "RETELL_API_KEY"
+  },
+  "budget": {
+    "monthlyTokenCap": 5000000,
+    "monthlyVoiceMinutesCap": 1000
+  }
+}
