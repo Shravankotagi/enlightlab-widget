@@ -1,4 +1,16 @@
-# Industry Expertise
+# Sectors and Industry Expertise
+
+Enlight Lab works and operates in multiple sectors and industries, delivering custom software, AI integrations, and IT consulting across the following:
+- Healthcare
+- FinTech
+- Technology & Startups
+- Education (EdTech)
+- Real Estate
+- Ecommerce
+- Insurance
+- Travel & Hospitality
+
+Below are the details for each of the sectors we serve:
 
 ## Industries — Healthcare
 Digital health applications, remote patient monitoring, clinical workflow automation, HIPAA-compliant platforms, telemedicine solutions. Case study: Huma — remote patient monitoring platform for doctors to monitor records remotely, run virtual hospital wards, support medical research.
