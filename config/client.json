@@ -3,7 +3,7 @@
   "companyName": "Enlight Lab",
   "founderName": "Dhananjay Goel",
   "founderEmail": "dj@enlightlab.com",
-  "allowedOrigins": ["localhost:3000", "enlightlab.com", "lp.enlightlab.com"],
+  "allowedOrigins": ["localhost:3000", "enlightlab.com", "lp.enlightlab.com", "enlightlab-widget.vercel.app", "vercel.app"],
   "dwellTime": 5,
   "branding": {
     "primaryColor": "#1a33cc",
