@@ -50,7 +50,7 @@ Do NOT include any markdown code blocks, conversational text, or explanation. Re
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
     return JSON.parse(text);
   } catch (err) {
-    console.error("[Vapi Webhook] Failed to extract lead from transcript:", err);
+    console.error("[Retell Webhook] Failed to extract lead from transcript:", err);
     return null;
   }
 }
@@ -58,32 +58,19 @@ Do NOT include any markdown code blocks, conversational text, or explanation. Re
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json();
-    const messageType = payload?.message?.type;
-    console.log(`[Vapi Webhook] Received webhook event type: ${messageType}`);
+    const event = payload?.event;
+    console.log(`[Retell Webhook] Received webhook event: ${event}`);
 
-    if (messageType === 'end-of-call-report') {
-      const rawDuration = payload.message.duration || payload.message.call?.duration || 0;
-      
-      // Vapi provides duration in seconds inside call object, or minutes in root report.
-      // We parse defensively and convert to minutes.
-      let minutes = 0;
-      if (rawDuration > 1200) {
-        // Very large number is likely milliseconds
-        minutes = rawDuration / 60000;
-      } else if (rawDuration > 20) {
-        // Number above 20 is likely seconds
-        minutes = rawDuration / 60;
-      } else {
-        // Otherwise, it is already represented in minutes
-        minutes = rawDuration;
-      }
+    // Retell calls ended event: "call_ended"
+    if (event === 'call_ended') {
+      const call = payload.call || {};
+      const durationMs = call.duration_ms || 0;
+      const minutes = durationMs / 60000;
 
-      console.log(`[Vapi Webhook] Recording voice usage: ${minutes.toFixed(2)} minutes.`);
+      console.log(`[Retell Webhook] Recording voice usage: ${minutes.toFixed(2)} minutes.`);
       recordVoiceUsage(minutes);
 
-      // Extract lead details and sync to HubSpot CRM
-      const call = payload.message.call || {};
-      const transcript = payload.message.transcript || call.transcript || '';
+      const transcript = call.transcript || '';
       
       // Edge Case 1: Check if the transcript is actually a conversational call
       const cleanTranscript = transcript.trim().replace(/[.\s]+/g, ' ');
@@ -91,7 +78,7 @@ export async function POST(req: NextRequest) {
         !/^(listening|speaking|connecting|disconnected|no speech detected|hello|hi|yes|no)$/i.test(cleanTranscript.toLowerCase().trim());
 
       if (transcript && isConversational) {
-        console.log(`[Vapi Webhook] Processing end of call transcript for lead extraction...`);
+        console.log(`[Retell Webhook] Processing end of call transcript for lead extraction...`);
         const config = getClientConfig();
         const companyName = config.companyName || 'Enlight Lab';
         
@@ -105,7 +92,7 @@ export async function POST(req: NextRequest) {
           const finalName = hasName ? extracted.name.trim() : 'Voice Assistant Lead';
           const finalEmail = hasEmail ? extracted.email.trim() : '';
 
-          console.log(`[Vapi Webhook] Extracted lead: ${finalName} (${finalEmail || 'No Email'}). Storing in HubSpot...`);
+          console.log(`[Retell Webhook] Extracted lead: ${finalName} (${finalEmail || 'No Email'}). Storing in HubSpot...`);
           
           const leadPayload = {
             name: finalName,
@@ -114,22 +101,23 @@ export async function POST(req: NextRequest) {
             role: extracted.role || '',
             problemStatement: extracted.problemStatement || '',
             transcript: transcript,
+            transcriptLink: call.recording_url || undefined, // Store recording link if available
             fitScore: 0,
             isHighFit: false
           };
           
           await createHubSpotLead(leadPayload);
         } else {
-          console.log(`[Vapi Webhook] No contact details (neither name nor email) could be extracted from transcript.`);
+          console.log(`[Retell Webhook] No contact details (neither name nor email) could be extracted from transcript.`);
         }
       } else {
-        console.log(`[Vapi Webhook] Call skipped (empty, silent, or no meaningful conversation detected).`);
+        console.log(`[Retell Webhook] Call skipped (empty, silent, or no meaningful conversation detected).`);
       }
     }
 
     return NextResponse.json({ received: true });
   } catch (err) {
-    console.error("[Vapi Webhook] Error processing event:", err);
+    console.error("[Retell Webhook] Error processing event:", err);
     return NextResponse.json({ error: 'Failed to process webhook event' }, { status: 500 });
   }
 }
