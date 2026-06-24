@@ -47,6 +47,60 @@ async function getQueryEmbedding(
   }
 }
 
+async function rewriteQuery(
+  query: string,
+  apiKey: string,
+  companyName: string
+): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
+  try {
+    const prompt = `You are a search query optimizer for a RAG system.
+Given a user query (which may contain typos, spelling errors, grammatical mistakes, or pronouns referring to the company, your services, or founder), rewrite it to be a clean, optimized search phrase in English for retrieving relevant context. If the query is related to the company, ensure "${companyName}" is included in the rewritten query. Correct all typos and misspellings.
+
+Examples:
+- "what all services are being provided by this comapny" -> "services provided by ${companyName}"
+- "who found it" -> "founder of ${companyName}"
+- "fractional cto work you did" -> "fractional CTO services case studies ${companyName}"
+- "is patient data secure" -> "security privacy HIPAA compliance ${companyName}"
+- "who is dj" -> "Dhananjay Goel dj ${companyName}"
+- "what tech stack do you use" -> "technology stack frameworks ${companyName}"
+- "tell me abot your servcies" -> "services provided by ${companyName}"
+
+User Query: "${query}"
+
+Return ONLY the clean optimized search query. Do not add any conversational text, explanations, or quotes.`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: prompt }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.0,
+          maxOutputTokens: 60
+        }
+      })
+    });
+
+    if (!response.ok) {
+      console.warn(`[RAG Query Rewrite] Failed to rewrite query, using original. Status: ${response.status}`);
+      return query;
+    }
+
+    const data = await response.json();
+    const rewritten = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || query;
+    // Strip quotes if LLM added them
+    return rewritten.replace(/^["']|["']$/g, '').trim();
+  } catch (err) {
+    console.error("[RAG Query Rewrite] Error during query rewrite:", err);
+    return query;
+  }
+}
+
 export async function retrieveRelevantContext(query: string): Promise<string> {
   const config = getClientConfig();
   const apiKey = process.env.GEMINI_API_KEY || '';
@@ -63,8 +117,18 @@ export async function retrieveRelevantContext(query: string): Promise<string> {
     return '';
   }
 
-  // 1. Generate query embedding vector
-  const queryVector = await getQueryEmbedding(query, apiKey, embedModel);
+  // 1. Rewrite query to correct typos and resolve pronouns/company references using LLM
+  const companyName = config.companyName || 'Enlight Lab';
+  let searchNormalizedQuery = query;
+  try {
+    searchNormalizedQuery = await rewriteQuery(query, apiKey, companyName);
+    console.log(`[RAG Service] Original Query: "${query}" | Rewritten Query for RAG: "${searchNormalizedQuery}"`);
+  } catch (e) {
+    console.warn("[RAG Service] Query rewrite failed, falling back to original query.", e);
+  }
+
+  // 2. Generate query embedding vector
+  const queryVector = await getQueryEmbedding(searchNormalizedQuery, apiKey, embedModel);
   if (!queryVector) {
     console.error("[RAG Service] Could not generate query embedding.");
     return '';
