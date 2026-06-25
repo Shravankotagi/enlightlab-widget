@@ -63,16 +63,16 @@
     
     if (msg.type === 'toggle-open') {
       if (dwellTimer) clearTimeout(dwellTimer);
-      container.style.width = '380px';
-      container.style.height = '600px';
+      container.style.width = 'min(380px, calc(100vw - 40px))';
+      container.style.height = 'min(600px, calc(100vh - 40px))';
       container.style.borderRadius = '24px';
     } else if (msg.type === 'toggle-close') {
       container.style.width = '65px';
       container.style.height = '65px';
       container.style.borderRadius = '50%';
     } else if (msg.type === 'resize-calendar') {
-      container.style.width = '460px';
-      container.style.height = '650px';
+      container.style.width = 'min(460px, calc(100vw - 40px))';
+      container.style.height = 'min(650px, calc(100vh - 40px))';
       container.style.borderRadius = '24px';
     }
   });

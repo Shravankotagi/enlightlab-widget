@@ -2,7 +2,7 @@ import React from 'react';
 import './globals.css';
 
 export const metadata = {
-  title: 'AI Widget Server',
+  title: 'Enlight lab-AI Assistant',
   description: 'Embeddable Chat & Voice Widget',
 };
 

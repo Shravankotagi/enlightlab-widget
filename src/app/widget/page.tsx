@@ -73,6 +73,7 @@ function WidgetContent() {
   const [callStatus, setCallStatus] = useState('Disconnected');
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [vapiLoaded, setVapiLoaded] = useState(false);
+  const [retellToken, setRetellToken] = useState<string>('');
 
   const messageEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -92,6 +93,18 @@ function WidgetContent() {
         setMessages([
           { role: 'assistant', content: data.branding.welcomeMessage }
         ]);
+
+        // Pre-fetch Retell token for instant, synchronous WebRTC user-interaction initialization
+        if (data.voice?.provider === 'retell') {
+          fetch(`/api/widget/voice/register-retell?client=${clientName}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(retellData => {
+              if (retellData.accessToken) {
+                setRetellToken(retellData.accessToken);
+              }
+            })
+            .catch(err => console.warn("[Retell Token Pre-fetch] Failed:", err));
+        }
       })
       .catch(err => {
         console.error("Config fetch failed:", err);
@@ -405,13 +418,32 @@ function WidgetContent() {
         setIsVoiceMode(true);
         setCallStatus('Connecting...');
         try {
-          const res = await fetch('/api/widget/voice/register-retell', { method: 'POST' });
-          if (!res.ok) {
+          let activeToken = retellToken;
+          if (!activeToken) {
+            // Fallback if not pre-fetched in time
+            const res = await fetch(`/api/widget/voice/register-retell?client=${clientName}`, { method: 'POST' });
+            if (!res.ok) {
+              const data = await res.json();
+              throw new Error(data.error || 'Failed to initialize session');
+            }
             const data = await res.json();
-            throw new Error(data.error || 'Failed to initialize session');
+            activeToken = data.accessToken;
           }
-          const { accessToken } = await res.json();
-          await retellClient.startCall({ accessToken });
+          
+          // Clear cached token so we don't reuse it
+          setRetellToken('');
+          
+          await retellClient.startCall({ accessToken: activeToken });
+
+          // Pre-fetch the next token in the background for subsequent calls
+          fetch(`/api/widget/voice/register-retell?client=${clientName}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(retellData => {
+              if (retellData.accessToken) {
+                setRetellToken(retellData.accessToken);
+              }
+            })
+            .catch(() => {});
         } catch (err: any) {
           console.error("Retell call initiation failed:", err);
           alert(`Call failed: ${err.message || 'Server error'}`);
