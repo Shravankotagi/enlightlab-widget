@@ -434,6 +434,14 @@ function WidgetContent() {
           setRetellToken('');
           
           await retellClient.startCall({ accessToken: activeToken });
+          
+          // Unblock audio playback on mobile browsers (iOS/Safari/Chrome)
+          try {
+            await retellClient.startAudioPlayback();
+            console.log("[Retell Voice] Audio playback started successfully.");
+          } catch (playbackErr) {
+            console.warn("[Retell Voice] Failed to start audio playback automatically:", playbackErr);
+          }
 
           // Pre-fetch the next token in the background for subsequent calls
           fetch(`/api/widget/voice/register-retell?client=${clientName}`, { method: 'POST' })
